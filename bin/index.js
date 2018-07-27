@@ -29,3 +29,11 @@ var outfile = arguments[3] || null;
 
 console.log(`Verbose: ${verboseOn ? 'On' : 'Off'}`)
 console.log(`outFilename prefix: ${outfile}_`);
+
+// read the infile
+
+// query the DB
+
+// write the CDR_log file with status of each sensor query
+
+// write the query results to the output file or files if an outfile is non-null
