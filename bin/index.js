@@ -46,50 +46,88 @@ fs.access(`${filepath}/${infile}`, fs.constants.R_OK | fs.constants.W_OK, (err) 
         //     console.log('failed opening DB connection')
         // }
         // else {
-            da.openDbConnection();
-            // read the infile line by line
-            const infileRS = fs.createReadStream(`${filepath}/${infile}`)
-            infileRS.setEncoding('utf8')
-            const rl = readline.createInterface(infileRS);
+        da.openDbConnection((err, connection) => {
+            if(err) {
+                console.log(err.message)
+            }
+            else {
+                // read the infile line by line
+                const infileRS = fs.createReadStream(`${filepath}/${infile}`)
+                infileRS.setEncoding('utf8')
+                const rl = readline.createInterface(infileRS);
 
-            //  readline 'line' event handler - fired for each line read from the infile 
-            rl.on('line', (barcode) => {
-                console.log(barcode)
-                // write the log file with name of each sensor requested
-                logFileWS.write(`Barcode requested: ${barcode}\n`)
+                //  readline 'line' event handler - fired for each line read from the infile 
+                rl.on('line', (barcode) => {
 
-                // query the DB
-                const resultRow = da.getSensor(barcode);
+                    console.log(barcode)
 
-                 // write the CDR_log file with status of each sensor query
-                if(resultRow === null) {    // error getting barcode
-                    numOfBarcodeErrors++
-                    logFileWS.write(`Error returned for barcode:${barcode}.`)
-                }
-                if(resultRow.length === 0) { //  barcode not found
-                    numOfBarcodesNotFound++
-                    logFileWS.write(`Barcode:${barcode} was not found.`)
-                }
-                // write the query results to the output file or files if an outfile is non-null
-                if(resultRow.length === 1) { // barcode found
-                    numOfBarcodesFound++
-                    logFileWS.write(`Barcode:${barcode} was found OK.`)
-                    outfileWS.write(`${resultRow[0].toString()}\n`)
-                }
-            })
+                    // pause input stream
+                    rl.pause();
 
-            //  readline 'close' event handler - fired when the end of the read stream is reached
-            rl.on('close', () => {
-                console.log('Closing everything')
-                da.closeDbConnection();
-                logFileWS.write(`***********************************************\n
-                                Number of barcodes found: ${numOfBarcodesFound}\n\n
-                                Number of barcodes not found: ${numOfBarcodesNotFound}\n\n
-                                Number of barcodes rejected: ${numOfBarcodeErrors}`)
-                logFileWS.write(`CDRutil finished ${new Date(Date.now()).toLocaleString()}\n`)                
-                logFileWS.end()
-                outfileWS.end()   
-            })
+                    // write the log file with name of each sensor requested
+                    logFileWS.write(`Barcode requested: ${barcode}\n`)
+
+                    // query the DB
+                    const resultRow = da.getSensor(barcode, (err, result) => {
+                        if(err) {
+                            console.log(err.message)
+                        }
+                        else {
+                            console.log(result)
+                            // write the CDR_log file with status of each sensor query
+                            if(result === null) {    // error getting barcode
+                                numOfBarcodeErrors++
+                                logFileWS.write(`Error returned for barcode:${barcode}.\n`)
+                                return;
+                            }
+                            if(result.row.length === 0) { //  barcode not found
+                                numOfBarcodesNotFound++
+                                logFileWS.write(`Barcode:${barcode} was not found.\n`)
+                                return;
+                            }
+                            // write the query results to the output file or files if an outfile is non-null
+                            if(result.row.length === 1) { // barcode found
+                                numOfBarcodesFound++
+                                logFileWS.write(`Barcode:${barcode} was found OK.\n`)
+                                outfileWS.write(`${result.row[0].toString()}\n`)
+                                return;
+                            }
+                        }
+                    });
+                    // resume input stream
+                    rl.resume();
+                })
+
+                rl.on('pause', () => {
+                    console.log('Readline paused.');
+                  }
+                );
+
+                rl.on('resume', () => {
+                    console.log('Readline resumed.');
+                  }
+                );
+
+                //  readline 'close' event handler - fired when the end of the read stream is reached
+                rl.on('close', () => {
+                    console.log('Closing everything')
+                    da.closeDbConnection((err) => {
+                        if(err) {
+                            console.log(err.message)
+                        }
+                        logFileWS.write(`***********************************************\n
+                        Number of barcodes found: ${numOfBarcodesFound}\n\n
+                        Number of barcodes not found: ${numOfBarcodesNotFound}\n\n
+                        Number of barcodes rejected: ${numOfBarcodeErrors}\n\n
+                        ***********************************************\n`)
+                        logFileWS.write(`CDRutil finished ${new Date(Date.now()).toLocaleString()}\n`)                
+                        logFileWS.end()
+                        outfileWS.end()   
+                    });
+                })
+            }
+        });
+ 
         // }
     }
   });
