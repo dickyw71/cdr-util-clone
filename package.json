@@ -2,9 +2,9 @@
   "name": "cdr-util-clone",
   "version": "1.0.0",
   "description": "",
-  "main": "./lib/greet.js",
+  "main": "./lib/data-access.js",
   "bin": {
-    "greet": "./bin/index.js"
+    "cdrutil": "./bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
