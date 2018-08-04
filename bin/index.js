@@ -59,43 +59,46 @@ fs.access(`${filepath}/${infile}`, fs.constants.R_OK | fs.constants.W_OK, (err) 
                 //  readline 'line' event handler - fired for each line read from the infile 
                 rl.on('line', (barcode) => {
 
-                    console.log(barcode)
-
                     // pause input stream
                     rl.pause();
 
-                    // write the log file with name of each sensor requested
-                    logFileWS.write(`Barcode requested: ${barcode}\n`)
+                    if(barcode.trim().length === 8) {
+                        console.log(barcode);
+                        // query the DB
+                        da.getSensor(barcode, (err, result) => {
 
-                    // query the DB
-                    const resultRow = da.getSensor(barcode, (err, result) => {
-                        if(err) {
-                            console.log(err.message)
-                        }
-                        else {
-                            console.log(result)
-                            // write the CDR_log file with status of each sensor query
-                            if(result === null) {    // error getting barcode
-                                numOfBarcodeErrors++
-                                logFileWS.write(`Error returned for barcode:${barcode}.\n`)
-                                return;
+                            // resume input stream
+                            rl.resume();
+
+                            if(err) {
+                                console.log(err.message)
                             }
-                            if(result.row.length === 0) { //  barcode not found
-                                numOfBarcodesNotFound++
-                                logFileWS.write(`Barcode:${barcode} was not found.\n`)
-                                return;
+                            else {
+                                // write the log file with name of each sensor requested
+                                logFileWS.write(`Barcode requested: ${barcode}\n`)
+
+                                console.log(result.rows)
+                                // write the CDR_log file with status of each sensor query
+                                if(result === null) {    // error getting barcode
+                                    numOfBarcodeErrors++
+                                    logFileWS.write(`Error returned for barcode:${barcode}.\n`)
+                                    return;
+                                }
+                                if(result.rows.length === 0) { //  barcode not found
+                                    numOfBarcodesNotFound++
+                                    logFileWS.write(`Barcode:${barcode} was not found.\n`)
+                                    return;
+                                }
+                                // write the query results to the output file or files if an outfile is non-null
+                                if(result.rows.length === 1) { // barcode found
+                                    numOfBarcodesFound++
+                                    logFileWS.write(`Barcode:${barcode} was found OK.\n`)
+                                    outfileWS.write(`${result.rows[0].toString()}\n`)
+                                    return;
+                                }
                             }
-                            // write the query results to the output file or files if an outfile is non-null
-                            if(result.row.length === 1) { // barcode found
-                                numOfBarcodesFound++
-                                logFileWS.write(`Barcode:${barcode} was found OK.\n`)
-                                outfileWS.write(`${result.row[0].toString()}\n`)
-                                return;
-                            }
-                        }
-                    });
-                    // resume input stream
-                    rl.resume();
+                        });
+                    }
                 })
 
                 rl.on('pause', () => {
@@ -115,11 +118,7 @@ fs.access(`${filepath}/${infile}`, fs.constants.R_OK | fs.constants.W_OK, (err) 
                         if(err) {
                             console.log(err.message)
                         }
-                        logFileWS.write(`***********************************************\n
-                        Number of barcodes found: ${numOfBarcodesFound}\n\n
-                        Number of barcodes not found: ${numOfBarcodesNotFound}\n\n
-                        Number of barcodes rejected: ${numOfBarcodeErrors}\n\n
-                        ***********************************************\n`)
+                        logFileWS.write(`***********************************************\nNumber of barcodes found: ${numOfBarcodesFound}\n\nNumber of barcodes not found: ${numOfBarcodesNotFound}\nNumber of barcodes rejected: ${numOfBarcodeErrors}\n***********************************************\n`)
                         logFileWS.write(`CDRutil finished ${new Date(Date.now()).toLocaleString()}\n`)                
                         logFileWS.end()
                         outfileWS.end()   
