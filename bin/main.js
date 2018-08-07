@@ -7,6 +7,7 @@ const sensor = require('./../lib/cert-caldue.js');
 
 let file = `/Users/richardwheatley/Developer/cdr-util-clone/test/dmc`
 
+//  Using callbacks
 input.getSensors(file, function(err, sensors) {
     if (err) {
         console.log(err);
@@ -30,3 +31,12 @@ input.getSensors(file, function(err, sensors) {
         });
     });
 });
+
+//  Using Promises
+// input.getSensors(file)
+//     .then(function(sensors) {
+
+//     })
+
+//  Using async/await
+//  TO-DO
