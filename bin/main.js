@@ -21,7 +21,7 @@ input.getSensors(file, function(err, sensors) {
         }
 
         sensors.forEach(barcode => {
-            sensor.getCertCalDue(barcode, function(err, result) {
+            sensor.getCalCertAndDueDate(barcode, function(err, result) {
                 if (err) {
                     console.log(err);
                     return;
