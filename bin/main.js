@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const oracledb = require('oracledb');
+const async = require('async');
 const input = require('./../lib/read-infile.js');
 const dbconfig = require('./../lib//db-config.js');
 const sensor = require('./../lib/cert-caldue.js');
@@ -32,6 +33,26 @@ input.getSensors(file, function(err, sensors) {
     });
 });
 
+// Using Async library
+async.series(
+    [
+        function(callback) {
+            input.getSensors(file, function(err, sensors) {
+                if(err) {
+                    callback(err);
+                }
+            });
+        },
+        function(callback) {
+            oracledb.createPool(dbconfig, function(err) {
+                callback(err);
+            });
+        },
+        function(callback) {
+            
+        }
+    ]
+)
 //  Using Promises
 // input.getSensors(file)
 //     .then(function(sensors) {
