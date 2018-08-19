@@ -9,7 +9,7 @@ const sensor = require('./../lib/cert-caldue.js');
 let file = `/Users/richardwheatley/Developer/cdr-util-clone/test/dmc`
 
 //  Using callbacks
-input.getSensors(file, function(err, sensors) {
+input.getSensors(file, function(err, barcodes) {
     if (err) {
         console.log(err);
         return;
@@ -21,7 +21,7 @@ input.getSensors(file, function(err, sensors) {
             return;
         }
 
-        sensors.forEach(barcode => {
+        barcodes.forEach(barcode => {
             sensor.getCalCertAndDueDate(barcode, function(err, result) {
                 if (err) {
                     console.log(err);
@@ -34,25 +34,25 @@ input.getSensors(file, function(err, sensors) {
 });
 
 // Using Async library
-async.series(
-    [
-        function(callback) {
-            input.getSensors(file, function(err, sensors) {
-                if(err) {
-                    callback(err);
-                }
-            });
-        },
-        function(callback) {
-            oracledb.createPool(dbconfig, function(err) {
-                callback(err);
-            });
-        },
-        function(callback) {
+// async.series(
+//     [
+//         function(callback) {
+//             input.getSensors(file, function(err, sensors) {
+//                 if(err) {
+//                     callback(err);
+//                 }
+//             });
+//         },
+//         function(callback) {
+//             oracledb.createPool(dbconfig, function(err) {
+//                 callback(err);
+//             });
+//         },
+//         function(callback) {
             
-        }
-    ]
-)
+//         }
+//     ]
+// )
 //  Using Promises
 // input.getSensors(file)
 //     .then(function(sensors) {
