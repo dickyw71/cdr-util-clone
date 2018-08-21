@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 
 const oracledb = require('oracledb');
+const fs = require('fs');
 const input = require('../lib/read-infile.js');
 const dbconfig = require('../lib/db-config.js');
 const sensor = require('../lib/cert-caldue.js');
 
 let file = `/Users/richardwheatley/Developer/cdr-util-clone/test/dmc`
+
+// Write the results to output file
+const outputWS = fs.createWriteStream(`${file}_new.csv`);
 
 //  Using callbacks
 // Create a default database connection pool 
@@ -29,10 +33,11 @@ oracledb.createPool(dbconfig, function(err) {
                     console.log(err);
                     return;
                 }
-                console.log(result);
+                console.log(result[0]);
 
-                // Write the results to output file
-                // TO-DO
+                if(result[0][1] !== undefined) {
+                    outputWS.write(`${result[0].toString()}\n`);
+                }
             });           
         });
     });
