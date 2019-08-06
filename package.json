@@ -1,7 +1,8 @@
 {
   "name": "cdr-util-clone",
   "version": "1.0.0",
-  "description": "",
+  "description": "Node.js implementation of CDRUtil commandline program.",
+  "repository": "https://github.com/dickyw71/cdr-util-clone",
   "main": "./lib/data-access.js",
   "bin": {
     "cdrutil": "./bin/index.js"
@@ -13,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async": "^2.6.1",
+    "async": "^2.6.3",
     "oracledb": "^2.3.0"
   }
 }
